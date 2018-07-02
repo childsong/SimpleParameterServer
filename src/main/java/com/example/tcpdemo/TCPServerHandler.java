@@ -9,6 +9,7 @@ import org.apache.mina.filter.buffer.IoBufferLazyInitializer;
 import org.apache.mina.filter.codec.serialization.ObjectSerializationEncoder;
 import org.apache.mina.filter.codec.serialization.ObjectSerializationInputStream;
 import org.apache.mina.filter.codec.serialization.ObjectSerializationOutputStream;
+import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 
 import java.awt.List;
 import java.io.IOException;
@@ -22,12 +23,11 @@ import java.util.LinkedHashMap;
 
 
 public class TCPServerHandler  extends IoHandlerAdapter {
-    private CharsetEncoder charsetEncoder = Charset.forName("UTF-8").newEncoder();
-    private CharsetDecoder charsetDecoder = Charset.forName("UTF-8").newDecoder();
     private ObjectSerializationInputStream objectSerializationInputStream=null;
-    private LinkedHashMap<Integer, Double> getGradient=new LinkedHashMap<Integer,Double>();
+    private LinkedHashMap<Integer, Double> gradientReceive=null;
     private ObjectSerializationOutputStream objectSerializationOutputStream=null;
-    private LinkedHashMap<Integer, Double> sentGradient=new LinkedHashMap<Integer,Double>();
+    private LinkedHashMap<Integer, Double> gradientSent=new LinkedHashMap<Integer,Double>();
+    private int[] testIntegerArray=new int[300];
     
     @Override
     public void sessionCreated(IoSession session) throws Exception {
@@ -72,20 +72,14 @@ public class TCPServerHandler  extends IoHandlerAdapter {
        //得到远程机器的address
         ArrayList<String> remoteAddress = getHostname(session);
         System.out.println("Get data from:"+remoteAddress);
-//        IoBuffer ioBuffer=(IoBuffer) message;
-//        ioBuffer.flip();
-//        objectSerializationInputStream=new ObjectSerializationInputStream(ioBuffer.asInputStream());
-//        getGradient=(LinkedHashMap<Integer, Double>) objectSerializationInputStream.readObject();
-//        System.out.println(objectSerializationInputStream.readObject());  // 需要将object序列化才能传！！！刚好有这个包
-//        System.out.println(message);
-        LinkedHashMap<Integer, Double> gradientReceive= (LinkedHashMap<Integer, Double>) message;
-        LinkedHashMap<Integer, Double> gradientSent= new LinkedHashMap<Integer,Double>();
-        for(int i=300;i<600;i++) {
-        	gradientSent.put(i, 0.3);
-        }
-        System.out.println(gradientReceive);
+
+        setGradientReceive(message);
+        setGradientSent();
+        setTestIntegerArray();
+        // 如果得到的object为-1的key不为null，那么说明发来的是pull请求。
         if(gradientReceive.get(-1)!=null) {
         	session.write(gradientSent);
+        	session.write(testIntegerArray);
         }
         else {
         	System.out.println("Perform program");
@@ -106,7 +100,7 @@ public class TCPServerHandler  extends IoHandlerAdapter {
         super.inputClosed(session);
     }
     
-    public static ArrayList<String> getHostname(IoSession session)
+    public ArrayList<String> getHostname(IoSession session)
     {
     	ArrayList<String> al_address=new ArrayList<String>();
     	String[] a = session.getRemoteAddress().toString().split(":");
@@ -116,4 +110,22 @@ public class TCPServerHandler  extends IoHandlerAdapter {
     	return al_address;
         
     }
+    
+    public void setGradientSent() {
+    	for(int i=300;i<600;i++) {
+        	gradientSent.put(i, 0.3);
+        }
+    }
+    
+    public void setTestIntegerArray() {
+        for(int i=300;i<600;i++) {
+        	testIntegerArray[i-300]=i+1;
+        }
+    }
+    
+    public void setGradientReceive(Object message) {
+    	gradientReceive= (LinkedHashMap<Integer, Double>) message;
+    }
+    
+
 }

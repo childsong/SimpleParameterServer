@@ -19,13 +19,13 @@ import java.lang.String;
 
 public class GradientCommunication {
 	private LinkedHashMap<Integer,Double> gradientPush=new LinkedHashMap<Integer,Double>();
-	private LinkedHashMap<Integer, Double> gradientpull=new LinkedHashMap<Integer,Double>();
+	private LinkedHashMap<Integer, Double> gradientPull=new LinkedHashMap<Integer,Double>();
 	private String ip;
 	private int port;
-	private static Socket socket=null;
 	private static int timeout=50*1000;
-	private static ObjectSerializationOutputStream gradientOutputStream=null;
 	private static IoSession session=null;
+	private static NioSocketConnector connector;
+	private static ClientHandler clientHandler=null;
 	
 	
 	
@@ -41,7 +41,7 @@ public class GradientCommunication {
 
 	public void buildLongConnection() throws IOException, InterruptedException {
 		try {
-			NioSocketConnector connector = new NioSocketConnector();
+			connector = new NioSocketConnector();
 			connector.setConnectTimeoutMillis(timeout);
 			// 设置读缓冲,传输的内容必须小于此缓冲
 			connector.getSessionConfig().setReadBufferSize(2048 * 2048);
@@ -50,7 +50,8 @@ public class GradientCommunication {
 			// 设置日志过滤器
 			// connector.getFilterChain().addLast("logger", new LoggingFilter());
 			// 设置Handler
-			connector.setHandler(new ClientHandler());
+			clientHandler=new ClientHandler();
+			connector.setHandler(clientHandler);
 
 			// 获取连接，该方法为异步执行
 			ConnectFuture future = connector.connect(new InetSocketAddress(ip, port));
@@ -80,7 +81,8 @@ public class GradientCommunication {
 		LinkedHashMap<Integer, Double> pullFlag=new LinkedHashMap<Integer,Double>();
 		pullFlag.put(-1, -1.0);
 		session.write(pullFlag);
-		
+		gradientPull = clientHandler.getGradientPull();
+		System.out.println("++"+gradientPull);
 	}
 	
 

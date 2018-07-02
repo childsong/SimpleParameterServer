@@ -7,6 +7,10 @@ import java.util.LinkedHashMap;
 
 
 public class ClientHandler extends IoHandlerAdapter{
+	private LinkedHashMap<Integer, Double> gradientPull=null;
+	
+	
+	
 	 @Override
 	    public void sessionCreated(IoSession session) throws Exception {
 	        //session 创建时调用
@@ -17,7 +21,7 @@ public class ClientHandler extends IoHandlerAdapter{
 	    public void messageReceived(IoSession session, Object message)
 	            throws Exception {
 	        //异步接收消息
-	    	LinkedHashMap<Integer, Double> gradientPull = (LinkedHashMap<Integer, Double>) message;
+	    	gradientPull = (LinkedHashMap<Integer, Double>) message;
 	    	System.out.println("receive message from server");
 	    	System.out.println(gradientPull);
 	    	
@@ -37,6 +41,10 @@ public class ClientHandler extends IoHandlerAdapter{
 	            throws Exception {
 	        //心跳
 	        System.out.println("客户端ide:");
+	    }
+	    
+	    public LinkedHashMap<Integer, Double> getGradientPull(){
+	    	return this.gradientPull;
 	    }
 	  
 
